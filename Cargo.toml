@@ -1,0 +1,10 @@
+workspace = { members = ["irc3_tags_derive"] }
+[package]
+name = "irc3_tags"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nom = "7.1.3"
+irc3_tags_derive = { path = "irc3_tags_derive" }
+pretty_assertions = "1.4.0"
