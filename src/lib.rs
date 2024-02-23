@@ -4,7 +4,7 @@ use nom::{
     bytes::complete::{tag, take_till, take_until1},
     combinator::opt,
     multi::separated_list1,
-    sequence::{preceded, separated_pair},
+    sequence::{delimited, separated_pair},
     IResult,
 };
 
@@ -95,9 +95,14 @@ impl<'a> Ircv3TagsParse<'a> {
     }
 
     fn irc3_tags(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
-        opt(preceded(
+        // opt(preceded(
+        //     tag("@"),
+        //     separated_list1(tag(";"), Ircv3TagsParse::ircv3_tags_key_values),
+        // ))(msg)
+        opt(delimited(
             tag("@"),
             separated_list1(tag(";"), Ircv3TagsParse::ircv3_tags_key_values),
+            tag(" "),
         ))(msg)
     }
 

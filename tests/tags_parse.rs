@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use irc3_tags::{irc3_tags, Irc3TagsParse};
+use ircv3_tags::{irc3_tags, Irc3TagsParse};
 
 #[cfg(test)]
 use pretty_assertions::assert_eq;

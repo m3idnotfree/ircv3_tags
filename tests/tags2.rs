@@ -1,14 +1,11 @@
-use irc3_tags::{irc3_tags, Irc3TagsParse, Ircv3TagsParse};
+use ircv3_tags::Ircv3TagsParse;
 #[cfg(test)]
 use pretty_assertions::assert_eq;
 use std::collections::HashMap;
 
 #[test]
 fn tags2_parse_fail_not_at_start() {
-    #[derive(irc3_tags)]
-    struct S {}
-
-    let tags ="badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ";
+    let tags ="badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= fue";
 
     let (msg, result) = Ircv3TagsParse::new(tags).vec_string();
     assert_eq!(msg, tags);
@@ -17,10 +14,7 @@ fn tags2_parse_fail_not_at_start() {
 
 #[test]
 fn tags2_parse_vec_str_ok_at_start() {
-    #[derive(irc3_tags)]
-    struct S {}
-
-    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ";
+    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= .y";
     let expect = Some(vec![
         ("badge-info", ""),
         ("badges", ""),
@@ -31,16 +25,13 @@ fn tags2_parse_vec_str_ok_at_start() {
         ("user-type", ""),
     ]);
     let (msg, result) = Ircv3TagsParse::new(tags).vec_str();
-    assert_eq!(msg, " ");
+    assert_eq!(msg, ".y");
     assert_eq!(result, expect);
 }
 
 #[test]
 fn tags2_parse_vec_string_ok_at_start() {
-    #[derive(irc3_tags)]
-    struct S {}
-
-    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ";
+    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ue";
     let expect = Some(vec![
         ("badge-info".to_string(), "".to_string()),
         ("badges".to_string(), "".to_string()),
@@ -51,15 +42,12 @@ fn tags2_parse_vec_string_ok_at_start() {
         ("user-type".to_string(), "".to_string()),
     ]);
     let (msg, result) = Ircv3TagsParse::new(tags).vec_string();
-    assert_eq!(msg, " ");
+    assert_eq!(msg, "ue");
     assert_eq!(result, expect);
 }
 #[test]
 fn tags2_parse_hashmap_str_ok_at_start() {
-    #[derive(irc3_tags)]
-    struct S {}
-
-    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ";
+    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ff";
     let mut expect = HashMap::new();
     expect.insert("badge-info", "");
     expect.insert("badges", "");
@@ -69,16 +57,13 @@ fn tags2_parse_hashmap_str_ok_at_start() {
     expect.insert("user-id", "713936733");
     expect.insert("user-type", "");
     let (msg, result) = Ircv3TagsParse::new(tags).hashmap_str();
-    assert_eq!(msg, " ");
+    assert_eq!(msg, "ff");
     assert_eq!(result, Some(expect));
 }
 
 #[test]
 fn tags2_parse_hashmap_string_ok_at_start() {
-    #[derive(irc3_tags)]
-    struct S {}
-
-    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= ";
+    let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= af";
     let mut expect = HashMap::new();
     expect.insert("badge-info".to_string(), "".to_string());
     expect.insert("badges".to_string(), "".to_string());
@@ -89,6 +74,6 @@ fn tags2_parse_hashmap_string_ok_at_start() {
     expect.insert("user-type".to_string(), "".to_string());
 
     let (msg, result) = Ircv3TagsParse::new(tags).hashmap_string();
-    assert_eq!(msg, " ");
+    assert_eq!(msg, "af");
     assert_eq!(result, Some(expect));
 }

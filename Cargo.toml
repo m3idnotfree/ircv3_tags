@@ -1,6 +1,6 @@
 workspace = { members = ["irc3_tags_derive"] }
 [package]
-name = "irc3_tags"
+name = "ircv3_tags"
 version = "0.1.0"
 edition = "2021"
 
