@@ -8,12 +8,9 @@ use nom::{
     IResult,
 };
 
-pub use irc3_tags_derive::irc3_tags;
-
 pub trait Irc3TagsParse {
     fn irc3_parse_tags(tags: &str) -> IResult<&str, Option<HashMap<String, String>>> {
         fn parse_t(msg: &str) -> IResult<&str, Option<HashMap<String, String>>> {
-            println!("parse t: {}", msg);
             if msg.is_empty() {
                 Ok(("", None))
             } else {
