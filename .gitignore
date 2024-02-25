@@ -1,2 +1,4 @@
 /target
 Cargo.lock
+/irc3_tags_derive
+/tests/tags_parse.rs

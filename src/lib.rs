@@ -8,37 +8,6 @@ use nom::{
     IResult,
 };
 
-pub trait Irc3TagsParse {
-    fn irc3_parse_tags(tags: &str) -> IResult<&str, Option<HashMap<String, String>>> {
-        fn parse_t(msg: &str) -> IResult<&str, Option<HashMap<String, String>>> {
-            if msg.is_empty() {
-                Ok(("", None))
-            } else {
-                let (msg, kv_pairs) = separated_list1(tag(";"), parse_key_values)(msg)?;
-
-                Ok((
-                    msg,
-                    Some(
-                        kv_pairs
-                            .into_iter()
-                            .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                            .collect::<HashMap<String, String>>(),
-                    ),
-                ))
-            }
-        }
-
-        fn parse_key_values(msg: &str) -> IResult<&str, (&str, &str)> {
-            let (msg, key) = take_until1("=")(msg)?;
-            let (msg, _) = tag("=")(msg)?;
-            let (msg, value) = take_till(|c| c == ' ' || c == ';')(msg)?;
-
-            Ok((msg, (key, value)))
-        }
-        parse_t(tags)
-    }
-}
-
 #[derive(Debug)]
 pub struct Ircv3TagsParse<'a> {
     data: (&'a str, Option<Vec<(&'a str, &'a str)>>),
@@ -92,10 +61,6 @@ impl<'a> Ircv3TagsParse<'a> {
     }
 
     fn irc3_tags(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
-        // opt(preceded(
-        //     tag("@"),
-        //     separated_list1(tag(";"), Ircv3TagsParse::ircv3_tags_key_values),
-        // ))(msg)
         opt(delimited(
             tag("@"),
             separated_list1(tag(";"), Ircv3TagsParse::ircv3_tags_key_values),
