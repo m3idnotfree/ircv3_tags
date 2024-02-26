@@ -7,9 +7,9 @@ use std::collections::HashMap;
 fn tags2_parse_fail_not_at_start() {
     let tags ="badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= fue";
 
-    let (msg, result) = Ircv3TagsParse::new(tags).vec_string();
-    assert_eq!(msg, tags);
-    assert_eq!(result, None);
+    let result = Ircv3TagsParse::new(tags);
+    assert_eq!(result.msg, tags);
+    assert_eq!(result.vec_str(), None);
 }
 
 #[test]
@@ -24,9 +24,9 @@ fn tags2_parse_vec_str_ok_at_start() {
         ("user-id", "713936733"),
         ("user-type", ""),
     ]);
-    let (msg, result) = Ircv3TagsParse::new(tags).vec_str();
-    assert_eq!(msg, ".y");
-    assert_eq!(result, expect);
+    let result = Ircv3TagsParse::new(tags);
+    assert_eq!(result.msg, ".y");
+    assert_eq!(result.vec_str(), expect);
 }
 
 #[test]
@@ -41,9 +41,9 @@ fn tags2_parse_vec_string_ok_at_start() {
         ("user-id".to_string(), "713936733".to_string()),
         ("user-type".to_string(), "".to_string()),
     ]);
-    let (msg, result) = Ircv3TagsParse::new(tags).vec_string();
-    assert_eq!(msg, "ue");
-    assert_eq!(result, expect);
+    let result = Ircv3TagsParse::new(tags);
+    assert_eq!(result.msg, "ue");
+    assert_eq!(result.vec_string(), expect);
 }
 #[test]
 fn tags2_parse_hashmap_str_ok_at_start() {
@@ -56,9 +56,9 @@ fn tags2_parse_hashmap_str_ok_at_start() {
     expect.insert("emote-sets", "0,300374282");
     expect.insert("user-id", "713936733");
     expect.insert("user-type", "");
-    let (msg, result) = Ircv3TagsParse::new(tags).hashmap_str();
-    assert_eq!(msg, "ff");
-    assert_eq!(result, Some(expect));
+    let result = Ircv3TagsParse::new(tags);
+    assert_eq!(result.msg, "ff");
+    assert_eq!(result.hashmap_str(), Some(expect));
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn tags2_parse_hashmap_string_ok_at_start() {
     expect.insert("user-id".to_string(), "713936733".to_string());
     expect.insert("user-type".to_string(), "".to_string());
 
-    let (msg, result) = Ircv3TagsParse::new(tags).hashmap_string();
-    assert_eq!(msg, "af");
-    assert_eq!(result, Some(expect));
+    let result = Ircv3TagsParse::new(tags);
+    assert_eq!(result.msg, "af");
+    assert_eq!(result.hashmap_string(), Some(expect));
 }
