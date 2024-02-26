@@ -10,53 +10,45 @@ use nom::{
 
 #[derive(Debug)]
 pub struct Ircv3TagsParse<'a> {
-    data: (&'a str, Option<Vec<(&'a str, &'a str)>>),
+    data: Option<Vec<(&'a str, &'a str)>>,
+    pub msg: &'a str,
 }
 
 impl<'a> Ircv3TagsParse<'a> {
     pub fn new(msg: &'a str) -> Ircv3TagsParse {
-        let result = Ircv3TagsParse::irc3_tags(msg).unwrap();
-        Ircv3TagsParse { data: result }
+        let (msg, data) = Ircv3TagsParse::irc3_tags(msg).unwrap();
+        Ircv3TagsParse { data, msg }
     }
-    pub fn vec_str(self) -> (&'a str, Option<Vec<(&'a str, &'a str)>>) {
-        (self.data.0, self.data.1)
+    pub fn vec_str(self) -> Option<Vec<(&'a str, &'a str)>> {
+        self.data
     }
 
-    pub fn vec_string(self) -> (&'a str, Option<Vec<(String, String)>>) {
-        match self.data.1 {
-            Some(k_v) => (
-                self.data.0,
-                Some(
-                    k_v.into_iter()
-                        .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                        .collect::<Vec<(String, String)>>(),
-                ),
+    pub fn vec_string(self) -> Option<Vec<(String, String)>> {
+        match self.data {
+            Some(k_v) => Some(
+                k_v.into_iter()
+                    .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
+                    .collect::<Vec<(String, String)>>(),
             ),
-            None => (self.data.0, None),
+            None => None,
         }
     }
 
-    pub fn hashmap_string(self) -> (&'a str, Option<HashMap<String, String>>) {
-        match self.data.1 {
-            Some(k_v) => (
-                self.data.0,
-                Some(
-                    k_v.into_iter()
-                        .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                        .collect::<HashMap<String, String>>(),
-                ),
+    pub fn hashmap_string(self) -> Option<HashMap<String, String>> {
+        match self.data {
+            Some(k_v) => Some(
+                k_v.into_iter()
+                    .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
+                    .collect::<HashMap<String, String>>(),
             ),
-            None => (self.data.0, None),
+            None => None,
         }
     }
 
-    pub fn hashmap_str(self) -> (&'a str, Option<HashMap<&'a str, &'a str>>) {
-        match self.data.1 {
-            Some(k_v) => (
-                self.data.0,
-                Some(k_v.into_iter().collect::<HashMap<&str, &str>>()),
-            ),
-            None => (self.data.0, None),
+    pub fn hashmap_str(self) -> Option<HashMap<&'a str, &'a str>> {
+        match self.data {
+            Some(k_v) => Some(k_v.into_iter().collect::<HashMap<&str, &str>>()),
+            None => None,
         }
     }
 
