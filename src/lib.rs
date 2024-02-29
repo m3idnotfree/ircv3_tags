@@ -42,7 +42,7 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Ircv3TagsParse<'a> {
     data: Option<Vec<(&'a str, &'a str)>>,
     pub msg: &'a str,
