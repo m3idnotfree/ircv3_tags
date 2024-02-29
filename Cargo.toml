@@ -1,6 +1,6 @@
 [package]
 name = "ircv3_tags"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["m3id"]
 edition = "2021"
 description = "only IRCv3 tag part parse"
