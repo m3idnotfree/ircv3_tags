@@ -54,37 +54,29 @@ impl<'a> Ircv3TagsParse<'a> {
         Ircv3TagsParse { data, remain }
     }
 
-    pub fn vec_str(self) -> Option<Vec<(&'a str, &'a str)>> {
+    pub fn to_vec_str(self) -> Option<Vec<(&'a str, &'a str)>> {
         self.data
     }
 
-    pub fn vec_string(self) -> Option<Vec<(String, String)>> {
-        match self.data {
-            Some(k_v) => Some(
-                k_v.into_iter()
-                    .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                    .collect::<Vec<(String, String)>>(),
-            ),
-            None => None,
-        }
+    pub fn to_vec_string(self) -> Option<Vec<(String, String)>> {
+        self.data.map(|k_v| {
+            k_v.into_iter()
+                .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
+                .collect::<Vec<(String, String)>>()
+        })
     }
 
-    pub fn hashmap_string(self) -> Option<HashMap<String, String>> {
-        match self.data {
-            Some(k_v) => Some(
-                k_v.into_iter()
-                    .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                    .collect::<HashMap<String, String>>(),
-            ),
-            None => None,
-        }
+    pub fn to_hashmap_string(self) -> Option<HashMap<String, String>> {
+        self.data.map(|k_v| {
+            k_v.into_iter()
+                .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
+                .collect::<HashMap<String, String>>()
+        })
     }
 
-    pub fn hashmap_str(self) -> Option<HashMap<&'a str, &'a str>> {
-        match self.data {
-            Some(k_v) => Some(k_v.into_iter().collect::<HashMap<&str, &str>>()),
-            None => None,
-        }
+    pub fn to_hashmap_str(self) -> Option<HashMap<&'a str, &'a str>> {
+        self.data
+            .map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
     }
 
     fn irc3_tags(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
