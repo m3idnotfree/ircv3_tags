@@ -45,14 +45,15 @@ use nom::{
 #[derive(Debug, PartialEq)]
 pub struct Ircv3TagsParse<'a> {
     data: Option<Vec<(&'a str, &'a str)>>,
-    pub msg: &'a str,
+    pub remain: &'a str,
 }
 
 impl<'a> Ircv3TagsParse<'a> {
     pub fn new(msg: &'a str) -> Ircv3TagsParse {
-        let (msg, data) = Ircv3TagsParse::irc3_tags(msg).unwrap();
-        Ircv3TagsParse { data, msg }
+        let (remain, data) = Ircv3TagsParse::irc3_tags(msg).unwrap();
+        Ircv3TagsParse { data, remain }
     }
+
     pub fn vec_str(self) -> Option<Vec<(&'a str, &'a str)>> {
         self.data
     }
