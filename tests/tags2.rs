@@ -8,8 +8,8 @@ fn tags2_parse_fail_not_at_start() {
     let tags ="badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= fue";
 
     let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.msg, tags);
-    assert_eq!(result.vec_str(), None);
+    assert_eq!(result.remain, tags);
+    assert_eq!(result.to_vec_str(), None);
 }
 
 #[test]
@@ -25,8 +25,8 @@ fn tags2_parse_vec_str_ok_at_start() {
         ("user-type", ""),
     ]);
     let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.msg, ".y");
-    assert_eq!(result.vec_str(), expect);
+    assert_eq!(result.remain, ".y");
+    assert_eq!(result.to_vec_str(), expect);
 }
 
 #[test]
@@ -42,8 +42,8 @@ fn tags2_parse_vec_string_ok_at_start() {
         ("user-type".to_string(), "".to_string()),
     ]);
     let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.msg, "ue");
-    assert_eq!(result.vec_string(), expect);
+    assert_eq!(result.remain, "ue");
+    assert_eq!(result.to_vec_string(), expect);
 }
 #[test]
 fn tags2_parse_hashmap_str_ok_at_start() {
@@ -57,8 +57,8 @@ fn tags2_parse_hashmap_str_ok_at_start() {
     expect.insert("user-id", "713936733");
     expect.insert("user-type", "");
     let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.msg, "ff");
-    assert_eq!(result.hashmap_str(), Some(expect));
+    assert_eq!(result.remain, "ff");
+    assert_eq!(result.to_hashmap_str(), Some(expect));
 }
 
 #[test]
@@ -74,6 +74,6 @@ fn tags2_parse_hashmap_string_ok_at_start() {
     expect.insert("user-type".to_string(), "".to_string());
 
     let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.msg, "af");
-    assert_eq!(result.hashmap_string(), Some(expect));
+    assert_eq!(result.remain, "af");
+    assert_eq!(result.to_hashmap_string(), Some(expect));
 }
