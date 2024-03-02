@@ -32,6 +32,7 @@ use std::collections::HashMap;
 
 use nom::{
     bytes::complete::{tag, take_till, take_until1},
+    character::complete::space1,
     combinator::opt,
     multi::separated_list1,
     sequence::{delimited, separated_pair},
@@ -84,7 +85,7 @@ impl<'a> Ircv3TagsParse<'a> {
         opt(delimited(
             tag("@"),
             separated_list1(tag(";"), Ircv3TagsParse::ircv3_tags_key_value),
-            tag(" "),
+            space1,
         ))(msg)
     }
 
