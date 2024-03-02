@@ -6,7 +6,7 @@
 //! use std::collections::HashMap;
 //!
 //! let msg = "@badge-info=;badges=broadcaster/1;client-nonce=997dcf443c31e258c1d32a8da47b6936;color=#0000FF;display-name=abc;emotes=;first-msg=0;flags=0-6:S.7;id=eb24e920-8065-492a-8aea-266a00fc5126;mod=0;room-id=713936733;subscriber=0;tmi-sent-ts=1642786203573;turbo=0;user-id=713936733;user-type= :abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys";
-//! let tags = Ircv3TagsParse::new(msg);
+//! let (remain, tags) = Ircv3TagsParse::parse(msg).unwrap();
 //! let expected_tags = HashMap::from([
 //!    ("badge-info", ""),
 //!    ("subscriber", "0"),
@@ -25,7 +25,7 @@
 //!    ("first-msg", "0"),
 //!    ("user-type", ""),
 //!]);
-//! assert_eq!(tags.remain, ":abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys");
+//! assert_eq!(remain, ":abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys");
 //! assert_eq!(tags.to_hashmap_str(),Some(expected_tags));
 //! ```
 use std::collections::HashMap;
@@ -41,13 +41,17 @@ use nom::{
 #[derive(Debug, PartialEq)]
 pub struct Ircv3TagsParse<'a> {
     data: Option<Vec<(&'a str, &'a str)>>,
-    pub remain: &'a str,
 }
 
 impl<'a> Ircv3TagsParse<'a> {
     pub fn new(msg: &'a str) -> Ircv3TagsParse {
-        let (remain, data) = Ircv3TagsParse::irc3_tags_parse(msg).unwrap();
-        Ircv3TagsParse { data, remain }
+        let (_, data) = Ircv3TagsParse::irc3_tags_parse(msg).unwrap();
+        Ircv3TagsParse { data }
+    }
+
+    pub fn parse(msg: &str) -> IResult<&str, Ircv3TagsParse> {
+        let (remain, data) = Ircv3TagsParse::irc3_tags_parse(msg)?;
+        Ok((remain, Ircv3TagsParse { data }))
     }
 
     pub fn to_vec_str(self) -> Option<Vec<(&'a str, &'a str)>> {

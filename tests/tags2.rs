@@ -7,8 +7,8 @@ use std::collections::HashMap;
 fn tags2_parse_fail_not_at_start() {
     let tags ="badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= fue";
 
-    let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.remain, tags);
+    let (remain, result) = Ircv3TagsParse::parse(tags).unwrap();
+    assert_eq!(remain, tags);
     assert_eq!(result.to_vec_str(), None);
 }
 
@@ -24,8 +24,8 @@ fn tags2_parse_vec_str_ok_at_start() {
         ("user-id", "713936733"),
         ("user-type", ""),
     ]);
-    let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.remain, ".y");
+    let (remain, result) = Ircv3TagsParse::parse(tags).unwrap();
+    assert_eq!(remain, ".y");
     assert_eq!(result.to_vec_str(), expect);
 }
 
@@ -41,8 +41,8 @@ fn tags2_parse_vec_string_ok_at_start() {
         ("user-id".to_string(), "713936733".to_string()),
         ("user-type".to_string(), "".to_string()),
     ]);
-    let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.remain, "ue");
+    let (remain,result) = Ircv3TagsParse::parse(tags).unwrap();
+    assert_eq!(remain, "ue");
     assert_eq!(result.to_vec_string(), expect);
 }
 #[test]
@@ -56,8 +56,8 @@ fn tags2_parse_hashmap_str_ok_at_start() {
     expect.insert("emote-sets", "0,300374282");
     expect.insert("user-id", "713936733");
     expect.insert("user-type", "");
-    let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.remain, "ff");
+    let (remain,result) = Ircv3TagsParse::parse(tags).unwrap();
+    assert_eq!(remain, "ff");
     assert_eq!(result.to_hashmap_str(), Some(expect));
 }
 
@@ -73,7 +73,7 @@ fn tags2_parse_hashmap_string_ok_at_start() {
     expect.insert("user-id".to_string(), "713936733".to_string());
     expect.insert("user-type".to_string(), "".to_string());
 
-    let result = Ircv3TagsParse::new(tags);
-    assert_eq!(result.remain, "af");
+    let (remain,result) = Ircv3TagsParse::parse(tags).unwrap();
+    assert_eq!(remain, "af");
     assert_eq!(result.to_hashmap_string(), Some(expect));
 }
