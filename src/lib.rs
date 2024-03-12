@@ -2,11 +2,11 @@
 //! # Examples
 //!
 //! ```
-//! use ircv3_tags::{IRCv3Tags, Ircv3TagsParse};
+//! use ircv3_tags::{IRCv3Tags, tags_parse};
 //! use std::collections::HashMap;
 //!
 //! let msg = "@badge-info=;badges=broadcaster/1;client-nonce=997dcf443c31e258c1d32a8da47b6936;color=#0000FF;display-name=abc;emotes=;first-msg=0;flags=0-6:S.7;id=eb24e920-8065-492a-8aea-266a00fc5126;mod=0;room-id=713936733;subscriber=0;tmi-sent-ts=1642786203573;turbo=0;user-id=713936733;user-type= :abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys";
-//! let (remain, tags) = Ircv3TagsParse::parse(msg).unwrap();
+//! let (remain, tags) = tags_parse(msg).unwrap();
 //! let expected_tags = HashMap::from([
 //!    ("badge-info", ""),
 //!    ("subscriber", "0"),
@@ -74,7 +74,7 @@ impl<'a> AsRef<Option<HashMap<&'a str, &'a str>>> for IRCv3Tags<'a> {
     }
 }
 
-pub struct Ircv3TagsParse;
+struct Ircv3TagsParse;
 
 impl Ircv3TagsParse {
     pub fn parse(msg: &str) -> IResult<&str, IRCv3Tags> {
@@ -107,4 +107,8 @@ impl Ircv3TagsParse {
             take_till(|c| c == ' ' || c == ';'),
         )(msg)
     }
+}
+
+pub fn tags_parse(msg: &str) -> IResult<&str, IRCv3Tags<'_>> {
+    Ircv3TagsParse::parse(msg)
 }
