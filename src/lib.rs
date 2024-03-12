@@ -2,7 +2,7 @@
 //! # Examples
 //!
 //! ```
-//! use ircv3_tags::Ircv3TagsParse;
+//! use ircv3_tags::{IRCv3Tags, Ircv3TagsParse};
 //! use std::collections::HashMap;
 //!
 //! let msg = "@badge-info=;badges=broadcaster/1;client-nonce=997dcf443c31e258c1d32a8da47b6936;color=#0000FF;display-name=abc;emotes=;first-msg=0;flags=0-6:S.7;id=eb24e920-8065-492a-8aea-266a00fc5126;mod=0;room-id=713936733;subscriber=0;tmi-sent-ts=1642786203573;turbo=0;user-id=713936733;user-type= :abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys";
@@ -26,7 +26,13 @@
 //!    ("user-type", ""),
 //!]);
 //! assert_eq!(remain, ":abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys");
-//! assert_eq!(tags.to_hashmap_str(),Some(expected_tags));
+//! assert_eq!(tags, IRCv3Tags::new(Some(expected_tags)));
+//!
+//! let tmi_sent_ts = tags.get("tmi-sent-ts");
+//! assert_eq!(tmi_sent_ts, Some("1642786203573"));
+//!
+//! let notif = tags.get("not-if");
+//! assert_eq!(notif, None);
 //! ```
 use std::collections::HashMap;
 
@@ -39,45 +45,49 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug, PartialEq)]
-pub struct Ircv3TagsParse<'a> {
-    data: Option<Vec<(&'a str, &'a str)>>,
+#[derive(Debug, Clone, PartialEq)]
+pub struct IRCv3Tags<'a>(Option<HashMap<&'a str, &'a str>>);
+
+impl<'a> IRCv3Tags<'a> {
+    pub fn new(tags: Option<HashMap<&'a str, &'a str>>) -> Self {
+        Self(tags)
+    }
+
+    pub fn get(&self, tag: &str) -> Option<&str> {
+        match &self.0 {
+            None => None,
+            Some(value) => value.get(tag).copied(),
+        }
+    }
+
+    pub fn get_map<F, O>(&self, tag: &str, f: F) -> Option<O>
+    where
+        F: Fn(&str) -> O,
+    {
+        self.get(tag).map(f)
+    }
 }
 
-impl<'a> Ircv3TagsParse<'a> {
-    pub fn new(msg: &'a str) -> Ircv3TagsParse {
-        let (_, data) = Ircv3TagsParse::irc3_tags_parse(msg).unwrap();
-        Ircv3TagsParse { data }
+impl<'a> AsRef<Option<HashMap<&'a str, &'a str>>> for IRCv3Tags<'a> {
+    fn as_ref(&self) -> &Option<HashMap<&'a str, &'a str>> {
+        &self.0
     }
+}
 
-    pub fn parse(msg: &str) -> IResult<&str, Ircv3TagsParse> {
+pub struct Ircv3TagsParse;
+
+impl Ircv3TagsParse {
+    pub fn parse(msg: &str) -> IResult<&str, IRCv3Tags> {
         let (remain, data) = Ircv3TagsParse::irc3_tags_parse(msg)?;
-        Ok((remain, Ircv3TagsParse { data }))
+        let result = Ircv3TagsParse::to_hashmap_str(data);
+        Ok((remain, IRCv3Tags(result)))
     }
 
-    pub fn to_vec_str(self) -> Option<Vec<(&'a str, &'a str)>> {
-        self.data
-    }
-
-    pub fn to_vec_string(self) -> Option<Vec<(String, String)>> {
-        self.data.map(|k_v| {
-            k_v.into_iter()
-                .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                .collect::<Vec<(String, String)>>()
-        })
-    }
-
-    pub fn to_hashmap_string(self) -> Option<HashMap<String, String>> {
-        self.data.map(|k_v| {
-            k_v.into_iter()
-                .map(|(k, v)| (k.to_owned().to_string(), v.to_owned().to_string()))
-                .collect::<HashMap<String, String>>()
-        })
-    }
-
-    pub fn to_hashmap_str(self) -> Option<HashMap<&'a str, &'a str>> {
-        self.data
-            .map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
+    pub fn to_hashmap_str<'a>(
+        data: Option<Vec<(&'a str, &'a str)>>,
+    ) -> Option<HashMap<&str, &str>> {
+        // self.data
+        data.map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
     }
 
     /// (remain, (key, value)*)
