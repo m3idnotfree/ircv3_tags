@@ -2,11 +2,11 @@
 //! # Examples
 //!
 //! ```
-//! use ircv3_tags::{IRCv3Tags, tags_parse};
+//! use ircv3_tags::IRCv3Tags;
 //! use std::collections::HashMap;
 //!
 //! let msg = "@badge-info=;badges=broadcaster/1;client-nonce=997dcf443c31e258c1d32a8da47b6936;color=#0000FF;display-name=abc;emotes=;first-msg=0;flags=0-6:S.7;id=eb24e920-8065-492a-8aea-266a00fc5126;mod=0;room-id=713936733;subscriber=0;tmi-sent-ts=1642786203573;turbo=0;user-id=713936733;user-type= :abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys";
-//! let (remain, tags) = tags_parse(msg).unwrap();
+//! let (remain, tags) = IRCv3Tags::parse(msg).unwrap();
 //! let expected_tags = HashMap::from([
 //!    ("badge-info", ""),
 //!    ("subscriber", "0"),
@@ -26,7 +26,7 @@
 //!    ("user-type", ""),
 //!]);
 //! assert_eq!(remain, ":abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys");
-//! assert_eq!(tags, IRCv3Tags::new(Some(expected_tags)));
+//! assert_eq!(tags.as_ref(), &Some(expected_tags));
 //!
 //! let tmi_sent_ts = tags.get("tmi-sent-ts");
 //! assert_eq!(tmi_sent_ts, Some("1642786203573"));
@@ -45,56 +45,25 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct IRCv3Tags<'a>(Option<HashMap<&'a str, &'a str>>);
 
 impl<'a> IRCv3Tags<'a> {
-    pub fn new(tags: Option<HashMap<&'a str, &'a str>>) -> Self {
-        Self(tags)
-    }
-
-    pub fn get(&self, tag: &str) -> Option<&str> {
-        match &self.0 {
-            None => None,
-            Some(value) => value.get(tag).copied(),
-        }
-    }
-
-    pub fn get_map<F, O>(&self, tag: &str, f: F) -> Option<O>
-    where
-        F: Fn(&str) -> O,
-    {
-        self.get(tag).map(f)
-    }
-}
-
-impl<'a> AsRef<Option<HashMap<&'a str, &'a str>>> for IRCv3Tags<'a> {
-    fn as_ref(&self) -> &Option<HashMap<&'a str, &'a str>> {
-        &self.0
-    }
-}
-
-struct Ircv3TagsParse;
-
-impl Ircv3TagsParse {
     pub fn parse(msg: &str) -> IResult<&str, IRCv3Tags> {
-        let (remain, data) = Ircv3TagsParse::irc3_tags_parse(msg)?;
-        let result = Ircv3TagsParse::to_hashmap_str(data);
+        let (remain, data) = IRCv3Tags::irc3_tags_parse(msg)?;
+        let result = IRCv3Tags::to_hashmap_str(data);
         Ok((remain, IRCv3Tags(result)))
     }
 
-    pub fn to_hashmap_str<'a>(
-        data: Option<Vec<(&'a str, &'a str)>>,
-    ) -> Option<HashMap<&str, &str>> {
-        // self.data
-        data.map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
+    pub fn get(&self, tag: &str) -> Option<&str> {
+        self.0.as_ref().and_then(|value| value.get(tag).copied())
     }
 
     /// (remain, (key, value)*)
-    pub fn irc3_tags_parse(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
+    fn irc3_tags_parse(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
         opt(delimited(
             tag("@"),
-            separated_list1(tag(";"), Ircv3TagsParse::ircv3_tags_key_value),
+            separated_list1(tag(";"), IRCv3Tags::ircv3_tags_key_value),
             space1,
         ))(msg)
     }
@@ -107,8 +76,15 @@ impl Ircv3TagsParse {
             take_till(|c| c == ' ' || c == ';'),
         )(msg)
     }
+
+    fn to_hashmap_str(data: Option<Vec<(&'a str, &'a str)>>) -> Option<HashMap<&str, &str>> {
+        // self.data
+        data.map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
+    }
 }
 
-pub fn tags_parse(msg: &str) -> IResult<&str, IRCv3Tags<'_>> {
-    Ircv3TagsParse::parse(msg)
+impl<'a> AsRef<Option<HashMap<&'a str, &'a str>>> for IRCv3Tags<'a> {
+    fn as_ref(&self) -> &Option<HashMap<&'a str, &'a str>> {
+        &self.0
+    }
 }
