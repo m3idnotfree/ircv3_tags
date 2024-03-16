@@ -1,21 +1,19 @@
-use ircv3_tags::{tags_parse, IRCv3Tags};
-#[cfg(test)]
-use pretty_assertions::assert_eq;
+use ircv3_tags::IRCv3Tags;
 use std::collections::HashMap;
 
 #[test]
 fn tags2_parse_fail_not_at_start() {
     let tags ="badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= fue";
 
-    let (remain, result) = tags_parse(tags).unwrap();
+    let (remain, result) = IRCv3Tags::parse(tags).unwrap();
     assert_eq!(remain, tags);
-    assert_eq!(result, IRCv3Tags::new(None));
+    assert_eq!(result.as_ref(), &None);
 }
 
 #[test]
 fn tags2_parse_vec_str_ok_at_start() {
     let tags ="@badge-info=;badges=;color=#0000FF;display-name=barbar;emote-sets=0,300374282;user-id=713936733;user-type= .y";
-    // let expect = Some(vec![
+
     let expect = HashMap::from([
         ("badge-info", ""),
         ("badges", ""),
@@ -25,9 +23,10 @@ fn tags2_parse_vec_str_ok_at_start() {
         ("user-id", "713936733"),
         ("user-type", ""),
     ]);
-    let (remain, result) = tags_parse(tags).unwrap();
+
+    let (remain, result) = IRCv3Tags::parse(tags).unwrap();
     assert_eq!(remain, ".y");
-    assert_eq!(result, IRCv3Tags::new(Some(expect)));
+    assert_eq!(result.as_ref(), &Some(expect));
     let badges = result.get("badges");
     assert_eq!(badges, Some(""));
     let user = result.get("user");
@@ -47,9 +46,10 @@ fn tags2_parse_vec_string_ok_at_start() {
         ("user-id", "713936733"),
         ("user-type", ""),
     ]);
-    let (remain, result) = tags_parse(tags).unwrap();
+
+    let (remain, result) = IRCv3Tags::parse(tags).unwrap();
     assert_eq!(remain, "ue");
-    assert_eq!(result, IRCv3Tags::new(Some(expect)));
+    assert_eq!(result.as_ref(), &Some(expect));
 }
 
 #[test]
@@ -63,9 +63,10 @@ fn tags2_parse_hashmap_str_ok_at_start() {
     expect.insert("emote-sets", "0,300374282");
     expect.insert("user-id", "713936733");
     expect.insert("user-type", "");
-    let (remain, result) = tags_parse(tags).unwrap();
+
+    let (remain, result) = IRCv3Tags::parse(tags).unwrap();
     assert_eq!(remain, "ff");
-    assert_eq!(result, IRCv3Tags::new(Some(expect)));
+    assert_eq!(result.as_ref(), &Some(expect));
 }
 
 #[test]
@@ -80,7 +81,8 @@ fn tags2_parse_hashmap_string_ok_at_start() {
     expect.insert("user-id", "713936733");
     expect.insert("user-type", "");
 
-    let (remain, result) = tags_parse(tags).unwrap();
+    let (remain, result) = IRCv3Tags::parse(tags).unwrap();
     assert_eq!(remain, "af");
-    assert_eq!(result, IRCv3Tags::new(Some(expect)));
+    assert_eq!(result.as_ref(), &Some(expect));
+    // let a = result.get_mapf("badges", BadgesTag);
 }

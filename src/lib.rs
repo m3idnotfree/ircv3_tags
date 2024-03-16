@@ -45,7 +45,7 @@ use nom::{
     IResult,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct IRCv3Tags<'a>(Option<HashMap<&'a str, &'a str>>);
 
 impl<'a> IRCv3Tags<'a> {
