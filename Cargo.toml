@@ -12,8 +12,5 @@ keywords = ["ircv3", "twitch", "tag"]
 name = "ircv3_tags"
 path = "src/lib.rs"
 
-[[bin]]
-name = "src/main.rs"
-
 [dependencies]
 nom = "7.1.3"
