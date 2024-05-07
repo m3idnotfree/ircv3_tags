@@ -8,6 +8,12 @@ repository = "https://github.com/m3idnotfree/ircv3_tags"
 license = "MIT OR Apache-2.0"
 keywords = ["ircv3", "twitch", "tag"]
 
+[lib]
+name = "ircv3_tags"
+path = "src/lib.rs"
+
+[[bin]]
+name = "src/main.rs"
 
 [dependencies]
 nom = "7.1.3"
