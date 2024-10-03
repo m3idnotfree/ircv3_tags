@@ -45,12 +45,6 @@ use nom::{
     IResult,
 };
 
-pub trait TagsParse<'a> {
-    fn parse(msg: &'a str) -> IResult<&'a str, Self>
-    where
-        Self: Sized;
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct IRCv3Tags<'a>(Option<HashMap<&'a str, &'a str>>);
 
