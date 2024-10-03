@@ -6,7 +6,7 @@
 //! use std::collections::HashMap;
 //!
 //! let msg = "@badge-info=;badges=broadcaster/1;client-nonce=997dcf443c31e258c1d32a8da47b6936;color=#0000FF;display-name=abc;emotes=;first-msg=0;flags=0-6:S.7;id=eb24e920-8065-492a-8aea-266a00fc5126;mod=0;room-id=713936733;subscriber=0;tmi-sent-ts=1642786203573;turbo=0;user-id=713936733;user-type= :abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys";
-//! let (remain, tags) = IRCv3Tags::parse(msg).unwrap();
+//! let (remain, tags) = IRCv3Tags::parse(msg);
 //! let expected_tags = HashMap::from([
 //!    ("badge-info", ""),
 //!    ("subscriber", "0"),
