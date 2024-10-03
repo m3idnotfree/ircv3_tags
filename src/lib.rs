@@ -55,10 +55,10 @@ pub trait TagsParse<'a> {
 pub struct IRCv3Tags<'a>(Option<HashMap<&'a str, &'a str>>);
 
 impl<'a> IRCv3Tags<'a> {
-    pub fn parse(msg: &str) -> IResult<&str, IRCv3Tags> {
-        let (remain, data) = IRCv3Tags::irc3_tags_parse(msg)?;
+    pub fn parse(msg: &str) -> (&str, IRCv3Tags) {
+        let (remain, data) = IRCv3Tags::irc3_tags_parse(msg).unwrap();
         let result = IRCv3Tags::to_hashmap_str(data);
-        Ok((remain, IRCv3Tags(result)))
+        (remain, IRCv3Tags(result))
     }
 
     pub fn get(&self, tag: &str) -> Option<&str> {
