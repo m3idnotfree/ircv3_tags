@@ -56,6 +56,7 @@ impl IRCv3Tags {
     pub fn get(&self, tag: &str) -> Option<String> {
         self.0.get(tag).cloned()
     }
+}
 
     /// (remain, (key, value)*)
     fn irc3_tags_parse(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
