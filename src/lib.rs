@@ -46,17 +46,15 @@ use nom::{
 };
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct IRCv3Tags<'a>(Option<HashMap<&'a str, &'a str>>);
+pub struct IRCv3Tags(HashMap<String, String>);
 
-impl<'a> IRCv3Tags<'a> {
-    pub fn parse(msg: &str) -> (&str, IRCv3Tags) {
-        let (remain, data) = IRCv3Tags::irc3_tags_parse(msg).unwrap();
-        let result = IRCv3Tags::to_hashmap_str(data);
-        (remain, IRCv3Tags(result))
+impl IRCv3Tags {
+    pub fn new(tags: HashMap<String, String>) -> Self {
+        Self(tags)
     }
 
-    pub fn get(&self, tag: &str) -> Option<&str> {
-        self.0.as_ref().and_then(|value| value.get(tag).copied())
+    pub fn get(&self, tag: &str) -> Option<String> {
+        self.0.get(tag).cloned()
     }
 
     /// (remain, (key, value)*)
