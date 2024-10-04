@@ -45,6 +45,11 @@ use nom::{
     IResult,
 };
 
+pub fn parse(msg: &str) -> (&str, Option<IRCv3Tags>) {
+    let (remain, data) = irc3_tags_parse(msg).unwrap();
+    (remain, data.map(|x| IRCv3Tags(from_hash_string(x))))
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct IRCv3Tags(HashMap<String, String>);
 
@@ -58,32 +63,26 @@ impl IRCv3Tags {
     }
 }
 
-    /// (remain, (key, value)*)
-    fn irc3_tags_parse(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
-        opt(delimited(
-            tag("@"),
-            separated_list1(tag(";"), IRCv3Tags::ircv3_tags_key_value),
-            space1,
-        ))(msg)
-    }
-
-    /// (remain, (key, value))
-    fn ircv3_tags_key_value(msg: &str) -> IResult<&str, (&str, &str)> {
-        separated_pair(
-            take_until1("="),
-            tag("="),
-            take_till(|c| c == ' ' || c == ';'),
-        )(msg)
-    }
-
-    fn to_hashmap_str(data: Option<Vec<(&'a str, &'a str)>>) -> Option<HashMap<&str, &str>> {
-        // self.data
-        data.map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
-    }
+/// (remain, (key, value)*)
+fn irc3_tags_parse(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
+    opt(delimited(
+        tag("@"),
+        separated_list1(tag(";"), ircv3_tags_key_value),
+        space1,
+    ))(msg)
 }
 
-impl<'a> AsRef<Option<HashMap<&'a str, &'a str>>> for IRCv3Tags<'a> {
-    fn as_ref(&self) -> &Option<HashMap<&'a str, &'a str>> {
-        &self.0
-    }
+/// (remain, (key, value))
+fn ircv3_tags_key_value(msg: &str) -> IResult<&str, (&str, &str)> {
+    separated_pair(
+        take_until1("="),
+        tag("="),
+        take_till(|c| c == ' ' || c == ';'),
+    )(msg)
+}
+
+fn from_hash_string(data: Vec<(&str, &str)>) -> HashMap<String, String> {
+    data.into_iter()
+        .map(|row| (row.0.to_string(), row.1.to_string()))
+        .collect::<HashMap<String, String>>()
 }
