@@ -31,7 +31,6 @@
 //! assert_eq!(remain, ":abc!abc@abc.tmi.twitch.tv PRIVMSG #xyz :HeyGuys");
 //!
 //! assert!(tags.is_some());
-
 //! let tags = tags.unwrap();
 //! assert_eq!(tags, IRCv3Tags::new(expected_tags));
 //!
@@ -59,7 +58,7 @@ pub fn parse(msg: &str) -> (&str, Option<IRCv3Tags>) {
 
 pub fn parse_nom(msg: &str) -> IResult<&str, Option<IRCv3Tags>> {
     let (remain, data) = irc3_tags_parse(msg)?;
-    Ok((remain, data.map(|f| IRCv3Tags(from_hash_string(f)))))
+    Ok((remain, data.map(|x| IRCv3Tags(from_hash_string(x)))))
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -97,13 +96,4 @@ fn from_hash_string(data: Vec<(&str, &str)>) -> HashMap<String, String> {
     data.into_iter()
         .map(|row| (row.0.to_string(), row.1.to_string()))
         .collect::<HashMap<String, String>>()
-}
-
-fn from_hash_str<'a>(data: Vec<(&'a str, &'a str)>) -> HashMap<&str, &str> {
-    // self.data
-    // data.map(|k_v| k_v.into_iter().collect::<HashMap<&str, &str>>())
-
-    data.into_iter()
-        .map(|row| (row.0, row.1))
-        .collect::<HashMap<&str, &str>>()
 }
