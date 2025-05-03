@@ -35,7 +35,7 @@
 //! assert_eq!(tags, IRCv3Tags::new(expected_tags));
 //!
 //! let tmi_sent_ts = tags.get("tmi-sent-ts");
-//! assert_eq!(tmi_sent_ts, Some("1642786203573".to_string()));
+//! assert_eq!(tmi_sent_ts, Some(&"1642786203573".to_string()));
 //!
 //! let notif = tags.get("not-if");
 //! assert_eq!(notif, None);
@@ -48,7 +48,7 @@ use nom::{
     combinator::opt,
     multi::separated_list1,
     sequence::{delimited, separated_pair},
-    IResult,
+    IResult, Parser,
 };
 
 pub fn parse(msg: &str) -> (&str, Option<IRCv3Tags>) {
@@ -69,8 +69,8 @@ impl IRCv3Tags {
         Self(tags)
     }
 
-    pub fn get(&self, tag: &str) -> Option<String> {
-        self.0.get(tag).cloned()
+    pub fn get(&self, tag: &str) -> Option<&String> {
+        self.0.get(tag)
     }
 }
 
@@ -80,7 +80,8 @@ fn irc3_tags_parse(msg: &str) -> IResult<&str, Option<Vec<(&str, &str)>>> {
         tag("@"),
         separated_list1(tag(";"), ircv3_tags_key_value),
         space1,
-    ))(msg)
+    ))
+    .parse(msg)
 }
 
 /// (remain, (key, value))
@@ -89,7 +90,8 @@ fn ircv3_tags_key_value(msg: &str) -> IResult<&str, (&str, &str)> {
         take_until1("="),
         tag("="),
         take_till(|c| c == ' ' || c == ';'),
-    )(msg)
+    )
+    .parse(msg)
 }
 
 fn from_hash_string(data: Vec<(&str, &str)>) -> HashMap<String, String> {

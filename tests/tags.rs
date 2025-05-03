@@ -34,7 +34,7 @@ fn parse_vec_str_ok_at_start() {
     assert_eq!(remain, ".y");
     assert_eq!(result, IRCv3Tags::new(expected));
     let badges = result.get("badges");
-    assert_eq!(badges, Some("".to_string()));
+    assert_eq!(badges, Some(&"".to_string()));
     let user = result.get("user");
     assert_eq!(user, None);
 }
