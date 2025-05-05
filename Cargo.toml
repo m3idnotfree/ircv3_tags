@@ -1,12 +1,15 @@
 [package]
 name = "ircv3_tags"
-version = "1.0.0"
+version = "2.0.0"
 authors = ["m3id"]
 edition = "2021"
-description = "only IRCv3 tag part parse"
+description = "Zero-copy parser for IRCv3 message tags"
 repository = "https://github.com/m3idnotfree/ircv3_tags"
 license = "MIT"
-keywords = ["ircv3", "twitch", "tag"]
+keywords = ["ircv3", "twitch", "irc", "parser", "chat"]
+categories = ["parser-implementations", "network-programming"]
+readme = "README.md"
+documentation = "https://docs.rs/ircv3_tags"
 
 [lib]
 name = "ircv3_tags"
