@@ -14,6 +14,8 @@
 //!
 //! For more information, see the [IRCv3 Message Tags specification](https://ircv3.net/specs/extensions/message-tags.html).
 //!
+mod host;
+pub use host::host;
 
 use std::collections::HashMap;
 
@@ -281,16 +283,7 @@ pub fn unescape_value(value: &str) -> String {
 /// - Segments cannot start or end with a hyphen '-'
 /// - Must end with a forward slash '/'
 fn vendor(input: &str) -> IResult<&str, &str> {
-    let hostname_chars = |c: char| c.is_alphanumeric() || c == '.' || c == '-';
-
-    let pattern = recognize((
-        alphanumeric1,
-        take_till(|c: char| c == '/' || !hostname_chars(c)),
-        peek(char('/')),
-    ))
-    .parse(input)?;
-
-    Ok(pattern)
+    recognize((host, peek(char('/')))).parse(input)
 }
 
 /// Validates a vendor name according to RFC 952 hostname rules.
