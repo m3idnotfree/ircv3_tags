@@ -11,6 +11,9 @@ categories = ["parser-implementations", "network-programming"]
 readme = "README.md"
 documentation = "https://docs.rs/ircv3_tags"
 
+[features]
+debug = []
+
 [lib]
 name = "ircv3_tags"
 path = "src/lib.rs"

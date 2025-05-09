@@ -15,7 +15,10 @@
 //! For more information, see the [IRCv3 Message Tags specification](https://ircv3.net/specs/extensions/message-tags.html).
 //!
 mod host;
-pub use host::host;
+pub use host::{host, validate_host, validate_label};
+
+#[cfg(feature = "debug")]
+pub use host::{debug_host, ErrorKind, HostError};
 
 use std::collections::HashMap;
 
