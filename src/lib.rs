@@ -197,6 +197,26 @@ impl<'a> IRCv3Tags<'a> {
     }
 }
 
+impl std::fmt::Display for IRCv3Tags<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut iter = self.0.iter().peekable();
+        while let Some((key, value)) = iter.next() {
+            write!(
+                f,
+                "{}: {}",
+                key,
+                value
+                    .as_ref()
+                    .map_or("''", |v| if v.is_empty() { "''" } else { v })
+            )?;
+            if iter.peek().is_some() {
+                write!(f, ", ")?;
+            }
+        }
+        Ok(())
+    }
+}
+
 fn tags(input: &str) -> IResult<&str, Vec<(&str, Option<&str>)>, IRCv3TagsError<&str>> {
     separated_list1(char(';'), tag).parse(input)
 }
