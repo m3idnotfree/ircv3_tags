@@ -83,7 +83,7 @@ fn A_client_only_tag__example_with_a_value_containing_valid_raw_and_escaped_char
     assert_eq!(remain, ":irc.example.com NOTICE #channel :Message");
     assert_eq!(result.get("+example"), Some(r"raw+:=,escaped\:\s\\"));
     assert_eq!(
-        result.get_unescaped("+example"),
+        result.get_escaped("+example"),
         Some("raw+:=,escaped; \\".to_string())
     );
 }

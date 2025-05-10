@@ -1,4 +1,4 @@
-# IRCv3 Tags Parser
+# IRCv3 Message Tags Parser
 
 [API Docs](https://docs.rs/ircv3_tags)
 

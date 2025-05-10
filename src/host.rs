@@ -5,7 +5,6 @@
 //!   characters only letters, digits, and hyphen.
 //! - Segments are separated by periods.
 //! - A valid hostname can have multiple segments.
-//!
 //! - Cannot contain consecutive hyphens
 //!
 //! For more information, see the [RFC 952](https://datatracker.ietf.org/doc/html/rfc952) \[DNS:4\]
@@ -21,47 +20,23 @@ use nom::{
     branch::alt,
     character::complete::{alpha1, alphanumeric1, char},
     combinator::recognize,
-    error::{Error, ErrorKind as NrrKind},
     multi::many0,
-    Err::Error as Nrr,
     IResult, Parser,
+};
+
+use crate::{
+    error::{
+        check_starts_ascii_alph, invalid_empty_label, invalid_label_hyphens,
+        invalid_start_with_letter,
+    },
+    HostError, HYPHEN,
 };
 
 /// RFC 952 (host) parser
 pub fn host(input: &str) -> IResult<&str, &str> {
-    if input.is_empty() {
-        return Err(Nrr(Error::new(input, NrrKind::Char)));
-    }
-
-    if !input.chars().next().unwrap().is_ascii_alphabetic() {
-        return Err(Nrr(Error::new(input, NrrKind::Char)));
-    }
-
-    let (remain, label_str) = label(input)?;
-
-    if label_str.is_empty() || label_str.ends_with('-') || label_str.contains("--") {
-        return Err(Nrr(Error::new(input, NrrKind::Char)));
-    }
-
-    if remain.starts_with('.') {
-        let mut current_input = remain;
-        let mut position = label_str.len();
-
-        while let Ok((remain2, _)) = dot(current_input) {
-            let (remain2, label_str2) = label(remain2)?;
-
-            if label_str2.is_empty() || label_str2.ends_with("-") || label_str2.contains("--") {
-                return Err(Nrr(Error::new(input, NrrKind::Char)));
-            }
-
-            current_input = remain2;
-            position += label_str2.len() + 1;
-        }
-        Ok((current_input, &input[0..position]))
-    } else {
-        Ok((remain, label_str))
-    }
+    debug_host(input).map_err(|err| err.map(|e| nom::error::Error::new(e.input, e.code)))
 }
+
 /// RFC 978 (host) parser with helpful error messages
 /// ```toml
 /// ircv3_tags = { version = "2", features = ["debug"]}
@@ -69,7 +44,6 @@ pub fn host(input: &str) -> IResult<&str, &str> {
 ///
 /// # Example
 /// ```
-/// # #[cfg(feature = "debug")]
 /// let input = "example.com";
 /// let (remain, messages) = ircv3_tags::debug_host(input).unwrap();
 /// assert_eq!(messages, "example.com");
@@ -79,47 +53,24 @@ pub fn host(input: &str) -> IResult<&str, &str> {
 ///     Err(nom::Err::Error(ircv3_tags::HostError {
 ///         input: "invalid-",
 ///         code: nom::error::ErrorKind::Char,
-///         error: ircv3_tags::ErrorKind::EndsWithLetterOrDigit,
+///         error: ircv3_tags::ErrorKind::HostErrorEndsWithLetterOrDigit,
 ///         reason: "end with an ascii alphabet or ascii digit",
 ///     }))
 /// );
 /// ```
-#[cfg(feature = "debug")]
 pub fn debug_host(input: &str) -> IResult<&str, &str, HostError<&str>> {
-    if input.is_empty() {
-        return Err(invalid_empty_label(input));
-    }
+    let (remain, label_str) = label(input)?;
 
-    if !input.chars().next().unwrap().is_ascii_alphabetic() {
-        return Err(invalid_start_with_letter(input));
-    }
-
-    let (remain, label_str) =
-        label(input).map_err(|err| err.map(|e| invalid_label_input(e.input, e.code)))?;
-
-    if label_str.ends_with('-') {
-        return Err(invalid_ends_with(input));
-    }
-
-    if label_str.contains("--") {
-        return Err(invalid_consecutive_hiphens(input));
-    }
+    invalid_label_hyphens(label_str)?;
 
     if remain.starts_with('.') {
         let mut current_input = remain;
         let mut position = label_str.len();
 
         while let Ok((remain2, _)) = dot(current_input) {
-            let (remain2, label_str2) =
-                label(remain2).map_err(|err| err.map(|e| invalid_label_input(e.input, e.code)))?;
+            let (remain2, label_str2) = label(remain2)?;
 
-            if label_str2.ends_with("-") {
-                return Err(invalid_ends_with(input));
-            }
-
-            if label_str2.contains("--") {
-                return Err(invalid_consecutive_hiphens(input));
-            }
+            invalid_label_hyphens(label_str2)?;
 
             current_input = remain2;
             position += label_str2.len() + 1;
@@ -130,18 +81,10 @@ pub fn debug_host(input: &str) -> IResult<&str, &str, HostError<&str>> {
     }
 }
 
-fn label(input: &str) -> IResult<&str, &str> {
-    recognize((alpha1, many0(alt((alphanumeric1, recognize(char('-'))))))).parse(input)
-}
-
-fn dot(input: &str) -> IResult<&str, char> {
-    char('.').parse(input)
-}
-
 pub fn validate_host(input: &str) -> bool {
     if input.is_empty()
-        || !input.chars().next().unwrap().is_ascii_alphabetic()
-        || input.ends_with('-')
+        || !input.starts_with(|c: char| c.is_ascii_alphabetic())
+        || input.ends_with(HYPHEN)
         || input.contains("--")
     {
         return false;
@@ -154,17 +97,15 @@ pub fn validate_host(input: &str) -> bool {
         .all(|segment| match label(segment) {
             Err(_) => false,
             Ok((remain, _)) => {
-                remain.is_empty()
-                    && segment.chars().next().unwrap().is_ascii_alphabetic()
-                    && !segment.ends_with('-')
+                remain.is_empty() && check_starts_ascii_alph(segment) && !segment.ends_with('-')
             }
         })
 }
 
 pub fn validate_label(input: &str) -> bool {
     if input.is_empty()
-        || !input.chars().next().unwrap().is_ascii_alphabetic()
-        || input.ends_with('-')
+        || !check_starts_ascii_alph(input)
+        || input.ends_with(HYPHEN)
         || input.contains("--")
     {
         return false;
@@ -172,107 +113,27 @@ pub fn validate_label(input: &str) -> bool {
     match label(input) {
         Err(_) => false,
         Ok((remain, _)) => {
-            remain.is_empty()
-                && input.chars().next().unwrap().is_ascii_alphabetic()
-                && !input.ends_with('-')
+            remain.is_empty() && check_starts_ascii_alph(input) && !input.ends_with('-')
         }
     }
 }
 
-#[cfg(feature = "debug")]
-#[derive(Debug, PartialEq)]
-pub struct HostError<I> {
-    pub input: I,
-    pub code: NrrKind,
-    pub error: ErrorKind,
-    pub reason: &'static str,
-}
-
-#[cfg(feature = "debug")]
-impl<I> nom::error::ParseError<I> for HostError<I> {
-    fn from_error_kind(input: I, kind: NrrKind) -> Self {
-        HostError {
-            input,
-            code: kind,
-            error: ErrorKind::NomError,
-            reason: "characters only letters, digits, and hyphen",
-        }
+fn label(input: &str) -> IResult<&str, &str, HostError<&str>> {
+    if input.is_empty() {
+        return Err(invalid_empty_label(input));
     }
 
-    fn append(_: I, _: NrrKind, other: Self) -> Self {
-        other
+    if !check_starts_ascii_alph(input) {
+        return Err(invalid_start_with_letter(input));
     }
+
+    recognize((alpha1, many0(alt((alphanumeric1, recognize(char(HYPHEN))))))).parse(input)
 }
 
-#[cfg(feature = "debug")]
-#[derive(Debug, PartialEq)]
-pub enum ErrorKind {
-    StartWithLetter,
-    EndsWithLetterOrDigit,
-    NoConsecutiveHyphens,
-    Empty,
-    InvalidLabel,
-    NomError,
+fn dot(input: &str) -> IResult<&str, char> {
+    char('.').parse(input)
 }
 
-fn invalid_empty_label<I>(input: I) -> nom::Err<HostError<I>>
-where
-    I: std::fmt::Display + Copy,
-{
-    Nrr(HostError {
-        input,
-        code: NrrKind::Alpha,
-        error: ErrorKind::Empty,
-        reason: "label must start with the ascii alphabet",
-    })
-}
-
-fn invalid_label_input<I>(input: I, code: NrrKind) -> HostError<I>
-where
-    I: std::fmt::Display + Copy,
-{
-    HostError {
-        input,
-        code,
-        error: ErrorKind::InvalidLabel,
-        reason: "failed to parse label",
-    }
-}
-
-fn invalid_start_with_letter<I>(input: I) -> nom::Err<HostError<I>>
-where
-    I: std::fmt::Display + Copy,
-{
-    Nrr(HostError {
-        input,
-        code: NrrKind::Alpha,
-        error: ErrorKind::StartWithLetter,
-        reason: "label must start with the ascii alphabet",
-    })
-}
-
-fn invalid_ends_with<I>(input: I) -> nom::Err<HostError<I>>
-where
-    I: std::fmt::Display + Copy,
-{
-    Nrr(HostError {
-        input,
-        code: NrrKind::Char,
-        error: ErrorKind::EndsWithLetterOrDigit,
-        reason: "end with an ascii alphabet or ascii digit",
-    })
-}
-fn invalid_consecutive_hiphens<I>(input: I) -> nom::Err<HostError<I>>
-where
-    I: std::fmt::Display + Copy,
-{
-    Nrr(HostError {
-        input,
-        code: NrrKind::Char,
-        error: ErrorKind::NoConsecutiveHyphens,
-        reason: "cannot contain consecutive hyphens",
-    })
-}
 #[cfg(test)]
 mod tests {
     use crate::host::validate_label;
@@ -455,7 +316,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "debug")]
     #[test]
     fn host_debug() {
         use crate::{debug_host, HostError};
@@ -478,7 +338,7 @@ mod tests {
                 Err(nom::Err::Error(HostError {
                     input,
                     code: nom::error::ErrorKind::Alpha,
-                    error: crate::ErrorKind::StartWithLetter,
+                    error: crate::ErrorKind::HostErrorStartWithLetter,
                     reason: "label must start with the ascii alphabet",
                 }))
             );
@@ -489,7 +349,7 @@ mod tests {
             Err(nom::Err::Error(HostError {
                 input: "a-",
                 code: nom::error::ErrorKind::Char,
-                error: crate::ErrorKind::EndsWithLetterOrDigit,
+                error: crate::ErrorKind::HostErrorEndsWithLetterOrDigit,
                 reason: "end with an ascii alphabet or ascii digit",
             }))
         );
@@ -499,7 +359,7 @@ mod tests {
             Err(nom::Err::Error(HostError {
                 input: "a--b",
                 code: nom::error::ErrorKind::Char,
-                error: crate::ErrorKind::NoConsecutiveHyphens,
+                error: crate::ErrorKind::HostErrorNoConsecutiveHyphens,
                 reason: "cannot contain consecutive hyphens",
             }))
         );
