@@ -1,6 +1,6 @@
 [package]
 name = "ircv3_tags"
-version = "2.0.1"
+version = "2.1.0"
 authors = ["m3id"]
 edition = "2021"
 description = "Zero-copy parser for IRCv3 message tags"
