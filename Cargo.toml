@@ -15,9 +15,5 @@ documentation = "https://docs.rs/ircv3_tags"
 name = "ircv3_tags"
 path = "src/lib.rs"
 
-[features]
-allow-underdash_key_name = []
-allow-underdash_host = []
-
 [dependencies]
 nom = "8.0.0"
