@@ -95,7 +95,7 @@ pub fn debug_parse(input: &str) -> IResult<&str, IRCv3Tags<'_>, IRCv3TagsError<&
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct IRCv3Tags<'a>(Vec<(&'a str, Option<&'a str>)>);
+pub struct IRCv3Tags<'a>(pub Vec<(&'a str, Option<&'a str>)>);
 
 impl<'a> IRCv3Tags<'a> {
     /// Gets the raw value for a key in the tag list without unescaping.
