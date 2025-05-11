@@ -30,10 +30,11 @@ use error::check_starts_ascii_alph;
 
 mod error;
 mod host;
+mod traits;
 
 pub use error::{ErrorKind, HostError, IRCv3TagsError};
 pub use host::{debug_host, host, validate_host, validate_label};
-
+pub use traits::CharValidator;
 #[cfg(not(feature = "allow-underdash_key_name"))]
 pub(crate) const HYPHEN: &str = "-";
 #[cfg(feature = "allow-underdash_key_name")]
