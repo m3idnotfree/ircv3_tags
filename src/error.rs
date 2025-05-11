@@ -1,7 +1,5 @@
 use nom::{Err::Error, IResult};
 
-use crate::HYPHEN;
-
 #[derive(Debug, PartialEq)]
 pub enum ErrorKind {
     HostErrorStartWithLetter,
@@ -62,7 +60,7 @@ impl<I> nom::error::ParseError<I> for HostError<I> {
 }
 
 pub(crate) fn invalid_label_hyphens(input: &str) -> IResult<(), (), HostError<&str>> {
-    if input.ends_with(HYPHEN) {
+    if input.ends_with(|e| crate::host::HYPHEN.contains(e)) {
         return Err(invalid_ends_with(input));
     }
 

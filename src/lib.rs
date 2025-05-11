@@ -14,18 +14,12 @@
 //!
 //! For more information, see the [IRCv3 Message Tags specification](https://ircv3.net/specs/extensions/message-tags.html).
 //!
-mod host;
-pub use host::{debug_host, host, validate_host, validate_label};
-
-mod error;
-pub use error::{ErrorKind, HostError, IRCv3TagsError};
-
 use std::collections::HashMap;
 
 use nom::{
     branch::alt,
     bytes::complete::take_till,
-    character::complete::{alphanumeric1, char, space1},
+    character::complete::{alphanumeric1, char, one_of, space1},
     combinator::{opt, recognize},
     multi::{many1, separated_list1},
     sequence::{delimited, preceded, terminated},
@@ -34,7 +28,16 @@ use nom::{
 
 use error::check_starts_ascii_alph;
 
-pub(crate) const HYPHEN: char = '-';
+mod error;
+mod host;
+
+pub use error::{ErrorKind, HostError, IRCv3TagsError};
+pub use host::{debug_host, host, validate_host, validate_label};
+
+#[cfg(not(feature = "allow-underdash_key_name"))]
+pub(crate) const HYPHEN: &str = "-";
+#[cfg(feature = "allow-underdash_key_name")]
+pub(crate) const HYPHEN: &str = "-_";
 
 /// Parses only the tags portion of an IRC message, using an unwrapping fallback for errors
 ///
@@ -217,6 +220,7 @@ impl std::fmt::Display for IRCv3Tags<'_> {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn tags(input: &str) -> IResult<&str, Vec<(&str, Option<&str>)>, IRCv3TagsError<&str>> {
     separated_list1(char(';'), tag).parse(input)
 }
@@ -272,7 +276,8 @@ fn key_name(input: &str) -> IResult<&str, &str, IRCv3TagsError<&str>> {
         }));
     }
 
-    recognize(many1(alt((alphanumeric1, recognize(char(HYPHEN)))))).parse(input)
+    // recognize(many1(alt((alphanumeric1, recognize(char(HYPHEN)))))).parse(input)
+    recognize(many1(alt((alphanumeric1, recognize(one_of(HYPHEN)))))).parse(input)
 }
 
 /// Parses an escaped value which is a sequence of zero or more UTF-8 characters
@@ -315,7 +320,8 @@ pub fn validate_key_name(key: &str) -> bool {
         return false;
     }
 
-    key.chars().all(|c| c.is_alphanumeric() || c == HYPHEN)
+    key.chars()
+        .all(|c| c.is_alphanumeric() || HYPHEN.contains(c))
 }
 
 /// Validates a vendor name according to RFC 952 hostname rules.
@@ -479,12 +485,19 @@ mod test {
         let result = key_name(input);
         assert_eq!(result, Ok(("", "exam-ple")));
 
-        let input = "exam_ple";
-        let result = key_name(input);
-        assert_eq!(result, Ok(("_ple", "exam")));
-
         assert!(key_name("12345").is_err());
         assert!(key_name("-example").is_err());
+    }
+
+    #[cfg(feature = "allow-underdash_key_name")]
+    #[test]
+    fn test_allow_host() {
+        let input = "exam_ple";
+        let result = key_name(input);
+        assert_eq!(result, Ok(("", "exam_ple")));
+        assert_eq!(key_name("example_"), Ok(("", "example_")));
+
+        assert!(key_name("_example").is_err(),);
     }
 
     #[test]
@@ -639,6 +652,7 @@ mod test {
             }))
         );
         assert!(key_name("-").is_err());
+        assert!(key_name("_").is_err());
         assert!(key_name("!").is_err());
         assert!(key_name(" ").is_err());
         assert!(key_name(":").is_err());

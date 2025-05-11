@@ -18,7 +18,7 @@
 //! For more information, see the
 use nom::{
     branch::alt,
-    character::complete::{alpha1, alphanumeric1, char},
+    character::complete::{alpha1, alphanumeric1, char, one_of},
     combinator::recognize,
     multi::many0,
     IResult, Parser,
@@ -29,8 +29,13 @@ use crate::{
         check_starts_ascii_alph, invalid_empty_label, invalid_label_hyphens,
         invalid_start_with_letter,
     },
-    HostError, HYPHEN,
+    HostError,
 };
+
+#[cfg(not(feature = "allow-underdash_host"))]
+pub(crate) const HYPHEN: &str = "-";
+#[cfg(feature = "allow-underdash_host")]
+pub(crate) const HYPHEN: &str = "-_";
 
 /// RFC 952 (host) parser
 pub fn host(input: &str) -> IResult<&str, &str> {
@@ -127,7 +132,11 @@ fn label(input: &str) -> IResult<&str, &str, HostError<&str>> {
         return Err(invalid_start_with_letter(input));
     }
 
-    recognize((alpha1, many0(alt((alphanumeric1, recognize(char(HYPHEN))))))).parse(input)
+    recognize((
+        alpha1,
+        many0(alt((alphanumeric1, recognize(one_of(HYPHEN))))),
+    ))
+    .parse(input)
 }
 
 fn dot(input: &str) -> IResult<&str, char> {
@@ -250,16 +259,122 @@ mod tests {
             );
             fn_test!(err, empty, $fn, [""]);
             fn_test!(err, whitespace_only, $fn, [" ", "  ", "\t", "\n"]);
+        };
+        ($fn:expr, allow) => {
+            fn_test!(
+                simple,
+                $fn,
+                [
+                    "example.com",
+                    "host.a.z",
+                    "server.host1",
+                    "a-b-c.x-y-z123",
+                    "a-b-c.x-y-z123",
+                ]
+            );
+            fn_test!(
+                normal,
+                $fn,
+                [
+                    "my-host-name",
+                    "my-host-name.server-01",
+                    "web-server-prod",
+                    "app-server-1.database-cluster-a"
+                ]
+            );
+            fn_test!(edge_cases,$fn,[
+                "a-very-long-hostname-that-is-still-valid-according-to-rfc952-specs-with-multiple-hyphens",
+                "a-b",
+                "x1",
+                "a-1"
+            ]);
+            fn_test!(
+                max_length,
+                $fn,
+                ["abcdefghijklmnopqrstuvwxyz-0123456789-abcdefghijklmnopqrstuvwxyz"]
+            );
+        };
+        ($fn:expr, err, allow) => {
+            fn_test!(
+                err,
+                starts_with_digit,
+                $fn,
+                [
+                    "1host",
+                    "host.1host",
+                    "9server",
+                    "123-invalid",
+                    "0invalid"
+                ]
+            );
+            fn_test!(
+                err,
+                starts_with_hyphen,
+                $fn,
+                [
+                    "-host",
+                    "host.-host",
+                    "-server-1",
+                    "-invalid-name"
+                ]
+            );
+            fn_test!(
+                err,
+                ends_with_hyphen,
+                $fn,
+                [
+                    "host-",
+                    "host.host-",
+                    "server-name-",
+                    "server.server-name-",
+                    "invalid-"
+                ]
+            );
+            fn_test!(
+                err,
+                ends_with_underdash,
+                $fn,
+                [
+                    "host_",
+                    "host.host_",
+                    "server-name_",
+                    "server.server-name_",
+                    "invalid_"
+                ]
+            );
+            fn_test!(
+                err,
+                consecutive_hyphens,
+                $fn,
+                [
+                    "host--name",
+                    "host.host--name",
+                    "server--01",
+                    "double--hyphen--test",
+                    "triple---hyphen",
+                    "quadruple----hyphen"
+                ]
+            );
+            fn_test!(err, empty, $fn, [""]);
+            fn_test!(err, whitespace_only, $fn, [" ", "  ", "\t", "\n"]);
         }
+
     }
+    #[cfg(not(feature = "allow-underdash_host"))]
     fn_tests!(crate::host::host);
+    #[cfg(not(feature = "allow-underdash_host"))]
     fn_tests!(crate::host::host, err);
+    #[cfg(feature = "allow-underdash_host")]
+    fn_tests!(crate::host::host, allow);
+    #[cfg(feature = "allow-underdash_host")]
+    fn_tests!(crate::host::host, err, allow);
 
     // fn_tests!(crate::host::debug_host);
     // fn_tests!(crate::host::debug_host, err);
 
+    #[cfg(not(feature = "allow-underdash_host"))]
     #[test]
-    fn validate_hostnames() {
+    fn validate_host_names() {
         let inputs_ok = [
             "a",
             "my-host-name",
@@ -300,6 +415,64 @@ mod tests {
             "valid-prefix-but-has.dot",
             "valid-start-invalid@end",
             "a-b-c-_-y-z",
+            "1host",
+            "-host",
+            "host-",
+            "-host",
+            "host-",
+            "ho--st",
+        ];
+        for ok in inputs_ok {
+            assert!(validate_label(ok), "{}", ok);
+        }
+
+        for err in inputs_err {
+            assert!(!validate_label(err), "{}", err);
+        }
+    }
+
+    #[cfg(feature = "allow-underdash_host")]
+    #[test]
+    fn validate_host_names() {
+        let inputs_ok = [
+            "a",
+            "my-host-name",
+            "server-01",
+            "web-server-prod",
+            "database-cluster-a",
+            "app-server-1",
+            "a-host",
+            "ho-st",
+            "hosta",
+            "host1",
+            "hostZ",
+            "ahost",
+            "Zhost",
+            "host_name",
+            "a-b-c-_-y-z",
+        ];
+        let inputs_err = [
+            "host--name",
+            "server--01",
+            "double--hyphen--test",
+            "triple---hyphen",
+            "terver.01",
+            "web@server",
+            "database$cluster",
+            "app server",
+            "test#host",
+            "invalid!",
+            "special&chars",
+            "spaces are invalid",
+            "uppercase+lowercase",
+            "",
+            " ",
+            "  ",
+            "\t",
+            "\n",
+            "almost-valid-but-has-a-space at-the-end",
+            "valid-prefix-but-has.dot",
+            "valid-start-invalid@end",
             "1host",
             "-host",
             "host-",
