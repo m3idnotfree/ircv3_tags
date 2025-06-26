@@ -4,6 +4,7 @@ version = "3.0.0"
 authors = ["m3id"]
 edition = "2021"
 description = "DEPRECATED: This crate is no longer maintained. Use 'ircv3_parse' instead."
+repository = "https://github.com/m3idnotfree/ircv3_tags"
 license = "MIT"
 keywords = ["deprecated"]
 categories = ["deprecated"]
