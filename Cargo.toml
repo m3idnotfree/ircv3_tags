@@ -7,5 +7,4 @@ description = "DEPRECATED: This crate is no longer maintained. Use 'ircv3_parse'
 repository = "https://github.com/m3idnotfree/ircv3_tags"
 license = "MIT"
 keywords = ["deprecated"]
-categories = ["deprecated"]
 readme = "README.md"
