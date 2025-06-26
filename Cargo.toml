@@ -1,19 +1,10 @@
 [package]
 name = "ircv3_tags"
-version = "2.2.0"
+version = "3.0.0"
 authors = ["m3id"]
 edition = "2021"
-description = "Zero-copy parser for IRCv3 message tags"
-repository = "https://github.com/m3idnotfree/ircv3_tags"
+description = "DEPRECATED: This crate is no longer maintained. Use 'ircv3_parse' instead."
 license = "MIT"
-keywords = ["ircv3", "twitch", "irc", "parser", "chat"]
-categories = ["parser-implementations", "network-programming"]
+keywords = ["deprecated"]
+categories = ["deprecated"]
 readme = "README.md"
-documentation = "https://docs.rs/ircv3_tags"
-
-[lib]
-name = "ircv3_tags"
-path = "src/lib.rs"
-
-[dependencies]
-nom = "8.0.0"

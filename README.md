@@ -1,22 +1,3 @@
-# IRCv3 Message Tags Parser
+# ⚠️ DEPRECATED CRATE
 
-[API Docs](https://docs.rs/ircv3_tags)
-
-## Examples
-
-```rust
-let input = "@id=234AB;+example.com/key=value :nick!user@host PRIVMSG #channel :Hello";
-let (remain, tags) = ircv3_tags::parse(input);
-
-assert_eq!(remain, ":nick!user@host PRIVMSG #channel :Hello");
-assert_eq!(tags.get("id"), Some("234AB"));
-assert_eq!(tags.get("+example.com/key"), Some("value"));
-```
-
-Returns a IResult
-
-```rust
-let input = "@id=123 :nick!user@host PRIVMSG #channel :Hello";
-let result = ircv3_tags::try_parse(input);
-assert!(result.is_ok());
-```
+**This crate has been deprecated and is no longer maintained. Use [`ircv3_parse`](https://github.com/m3idnotfree/ircv3_tags) instead.**
